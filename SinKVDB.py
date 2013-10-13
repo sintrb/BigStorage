@@ -197,7 +197,7 @@ class SinKVDB(object):
 		'''
 		if self.cache and key in self.__cache__:
 			# return from cache
-			print 'from cache:%s'%key
+# 			print 'from cache:%s'%key
 			return self.__cache__[key]
 		
 		obj = self.get_one(key)
