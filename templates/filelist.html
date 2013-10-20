@@ -55,7 +55,7 @@ $def with (objs=[])
 <div id="view">
 <ul>
 $for obj in objs:
-	<li><a href="/get/$objs['key]" target="none">$objs['key']--$objs['name']</a><li>
+	<li><a href="/get/$obj['storekey']" target="none">$obj['storekey']--$obj['filename']</a><li>
 </ul>
 </div>
 

@@ -103,7 +103,8 @@ class Upload(BaseClass):
 
 class List(BaseClass):
 		def GET(self, oth=''):
-			objs = self.kvdb.get_all('%_key')
+			objs = self.kvdb.values('%_key')
+			print objs
 			return render.filelist(objs=objs)
 
 app = web.application(urls, globals())
