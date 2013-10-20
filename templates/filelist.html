@@ -1,4 +1,4 @@
-$def with (keys=[])
+$def with (objs=[])
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -54,8 +54,8 @@ $def with (keys=[])
 <body>
 <div id="view">
 <ul>
-$for key in keys:
-	<li><a href="/get/$key" target="none">$key</a><li>
+$for obj in objs:
+	<li><a href="/get/$objs['key]" target="none">$objs['key']--$objs['name']</a><li>
 </ul>
 </div>
 

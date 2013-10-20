@@ -50,6 +50,11 @@ class Source(BaseClass):
 				raise web.notmodified()
 			else:
 				attrs = self.kvdb[key]
+				if not 'viewcount' in attrs:
+					attrs['viewcount'] = 0
+				attrs['viewcount'] = attrs['viewcount']+1
+				self.kvdb[key] = attrs
+				web.header('View-Count', attrs['viewcount'])
 				web.header('Content-Type', attrs['Content-Type'])
 				web.header('ETag', key)
 				web.header('Content-Disposition', 'filename="%s"' % attrs['filename'])
@@ -98,7 +103,8 @@ class Upload(BaseClass):
 
 class List(BaseClass):
 		def GET(self, oth=''):
-			return render.filelist(keys=self.kvdb.keys('%_key'))
+			objs = self.kvdb.get_all('%_key')
+			return render.filelist(objs=objs)
 
 app = web.application(urls, globals())
 
