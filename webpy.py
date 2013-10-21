@@ -16,13 +16,14 @@ urls = (
 	'/upload/(.*)', 'Upload',
 	'/list/(.*)', 'List',
 	'/get/(.*)', 'Source',
+	'/(.*)', 'Upload',
 	'.*', 'Upload'
 )
 
 def genkey(l=10):
 	ss = 'abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 	tk = ''.join([random.choice(ss) for i in range(0, l)])
-	return '%s_key'%tk
+	return tk
 
 def get_header(s, default=''):
 	'''Get request header'''
@@ -36,15 +37,14 @@ def get_header(s, default=''):
 
 image_suffixs = ['png', 'jpg', 'jpeg', 'bmp', 'gif']
 text_suffixs = ['heml', 'txt', 'log', 'ini', 'c', 'cpp', 'java']
-
 class BaseClass():
 	def __init__(self):
-		self.kvdb = SinKVDB(dbcon=get_connect(), table='tb_bigstorage', tag='bs', reset=False, cache=True, cachesize=10, debug=False)
+		self.kvdb = SinKVDB(dbcon=get_connect(), table='tb_bigstorage_key', tag='bs', reset=False, cache=True, cachesize=10, debug=False)
+		self.kvdbval = SinKVDB(dbcon=get_connect(), table='tb_bigstorage_val', tag='bs', reset=False, cache=True, cachesize=10, debug=False)
 
 class Source(BaseClass):
 	def GET(self, key=''):
 		etag = get_header('HTTP_IF_NONE_MATCH')
-		
 		if key in self.kvdb:
 			if etag == key:
 				raise web.notmodified()
@@ -58,7 +58,7 @@ class Source(BaseClass):
 				web.header('Content-Type', attrs['Content-Type'])
 				web.header('ETag', key)
 				web.header('Content-Disposition', 'filename="%s"' % attrs['filename'])
-				return self.kvdb[attrs['storekey']]
+				return self.kvdbval[key]
 		else:
 			return 'no thing'
 		
@@ -67,7 +67,7 @@ class Upload(BaseClass):
 		return render.upload(key=key)
 
 	def POST(self, refkey=''):
-		keylen = 32
+		keylen = 64
 		key = genkey(keylen)
 		while key in self.kvdb:
 			key = genkey(keylen)
@@ -85,26 +85,28 @@ class Upload(BaseClass):
 			else:
 				# binary file
 				attrs['Content-Type'] = 'application/octet-stream'
-			attrs['storekey'] = '%s_store' % key
 			attrs['filename'] = filename
+			attrs['key'] = key
 			attrs['time'] = int(time.time())
 			attrs['suffix'] = suffix
-			self.kvdb[attrs['storekey']] = thisfile.value
 			self.kvdb[key] = attrs
-			
+
+			self.kvdbval[key] = thisfile.value
+
 			self.kvdb.commit()
+			self.kvdbval.commit()
+
 			if refkey == 'new':
 				return key
 			else:
-				raise web.seeother('/upload/%s' % key)
+				raise web.seeother('/%s' % key)
 		else:
 			return 'fail'
 
 
 class List(BaseClass):
 		def GET(self, oth=''):
-			objs = self.kvdb.values('%_key')
-			print objs
+			objs = self.kvdb.values()
 			return render.filelist(objs=objs)
 
 app = web.application(urls, globals())
